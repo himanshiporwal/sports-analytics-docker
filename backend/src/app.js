@@ -16,8 +16,9 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/', healthRoutes); // Root level health check
-app.use('/sports', sportsRoutes);
+app.use('/api', healthRoutes);
+app.use('/api/sports', sportsRoutes);
+
 
 // 404 Handler
 app.use((req, res) => {
