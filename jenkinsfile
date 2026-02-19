@@ -1,0 +1,79 @@
+pipeline {
+  agent any
+
+  environment {
+    // Change to your Docker Hub username
+    DOCKERHUB_USER = "himanshi1409"
+
+    // Image names
+    BACKEND_IMAGE  = "${DOCKERHUB_USER}/sports-backend:latest"
+    FRONTEND_IMAGE = "${DOCKERHUB_USER}/sports-frontend:latest"
+  }
+
+  stages {
+
+    stage('Checkout Code') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Build Backend Image') {
+      steps {
+        sh """
+          docker build -t ${BACKEND_IMAGE} ./backend
+        """
+      }
+    }
+
+    stage('Build Frontend Image') {
+      steps {
+        sh """
+          docker build -t ${FRONTEND_IMAGE} ./frontend
+        """
+      }
+    }
+
+    stage('Docker Hub Login') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: 'dockerhub-creds',
+          usernameVariable: 'DOCKER_USER',
+          passwordVariable: 'DOCKER_PASS'
+        )]) {
+          sh """
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+          """
+        }
+      }
+    }
+
+    stage('Push Images to Docker Hub') {
+      steps {
+        sh """
+          docker push ${BACKEND_IMAGE}
+          docker push ${FRONTEND_IMAGE}
+        """
+      }
+    }
+
+    stage('Logout') {
+      steps {
+        sh "docker logout || true"
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "✅ Pipeline Success: Images built and pushed to Docker Hub!"
+    }
+    failure {
+      echo "❌ Pipeline Failed. Check console output."
+    }
+    always {
+      // Cleanup old images (optional)
+      sh "docker image prune -f || true"
+    }
+  }
+}
