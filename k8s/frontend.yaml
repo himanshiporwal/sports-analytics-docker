@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sports-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sports-frontend
+  template:
+    metadata:
+      labels:
+        app: sports-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: himanshi1409/sports-frontend:latest
+          ports:
+            - containerPort: 4173
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sports-frontend
+spec:
+  selector:
+    app: sports-frontend
+  ports:
+    - port: 4173
+      targetPort: 4173
+  type: NodePort
